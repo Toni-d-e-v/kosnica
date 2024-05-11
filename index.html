@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistika Kosnica</title>
+  <style>
+    /* Stilizacija za bolji izgled */
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    nav {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    nav button {
+      margin: 0 10px;
+      padding: 10px 20px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    nav button:hover {
+      background-color: #45a049;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      background-color: #f2f2f2;
+    }
+    #unos {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <button onclick="izbrisiSvePodatke()">Izbriši sve podatke</button>
+    <button onclick="preuzmiPodatke()">Spremi podatke</button>
+  </nav>
+  <div>
+    <input type="file" onchange="ucitajPodatke(event)">
+    Uvezi podatke
+  </div>
+  <h1>Statistika Kosnica</h1>
+
+  <div id="unos">
+    <input type="date" id="datum">
+    <input type="number" id="brojKosnice" placeholder="Broj kosnice">
+    <input type="number" id="tezina" placeholder="Težina kosnice (kg)">
+    <input type="number" id="minTemp" placeholder="Min Temp">
+    <input type="number" id="maxTemp" placeholder="Max Temp">
+    <input type="number" id="kisa" placeholder="Kisa">
+    <input type="number" id="vlaznost" placeholder="Vlaznost">
+    <input type="text" id="napomene" placeholder="Napomene">
+    <button onclick="unesiPodatke()">Unesi</button>
+    <button onclick="postaviSadasnjiDatum()">Sadašnji datum</button>
+  </div>
+
+  <table id="statistika">
+    <thead>
+      <tr>
+        <th>Datum</th>
+        <th>Broj Kosnice</th>
+        <th>Težina Kosnice (kg)</th>
+        <th>Min Temp</th>
+        <th>Max Temp</th>
+        <th>Kiša</th>
+        <th>Vlažnost</th>
+        <th>Napomene</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Podaci će biti dodani dinamički -->
+    </tbody>
+  </table>
+
+  <script>
+    // Funkcija za ažuriranje tablice s podacima iz localStorage-a
+    function azurirajTablicu() {
+      let tabela = document.getElementById("statistika");
+      let tbody = tabela.getElementsByTagName("tbody")[0];
+      tbody.innerHTML = "";
+
+      // Dohvati podatke iz localStorage-a
+      let podaci = JSON.parse(localStorage.getItem("kosnice")) || [];
+
+      // Iteriraj kroz podatke i dodaj ih u tablicu
+      podaci.forEach(function(podatak) {
+        let red = document.createElement("tr");
+        red.innerHTML = `
+          <td>${podatak.datum}</td>
+          <td>${podatak.brojKosnice}</td>
+          <td>${podatak.tezina}</td>
+          <td>${podatak.minTemp}</td>
+          <td>${podatak.maxTemp}</td>
+          <td>${podatak.kisa}</td>
+          <td>${podatak.vlaznost}</td>
+          <td>${podatak.napomene}</td>
+        `;
+        tbody.appendChild(red);
+      });
+    }
+
+    // Funkcija za unos novih podataka u tablicu i localStorage
+    function unesiPodatke() {
+      let datum = document.getElementById("datum").value;
+      let brojKosnice = document.getElementById("brojKosnice").value;
+      let tezina = parseFloat(document.getElementById("tezina").value);
+      let minTemp = parseFloat(document.getElementById("minTemp").value);
+      let maxTemp = parseFloat(document.getElementById("maxTemp").value);
+      let kisa = parseFloat(document.getElementById("kisa").value);
+      let vlaznost = parseFloat(document.getElementById("vlaznost").value);
+      let napomene = document.getElementById("napomene").value;
+
+      if (isNaN(brojKosnice) || isNaN(tezina) || isNaN(minTemp) || isNaN(maxTemp) || isNaN(kisa) || isNaN(vlaznost)) {
+        alert("Unesite valjane podatke.");
+        return;
+      }
+
+      let podaci = JSON.parse(localStorage.getItem("kosnice")) || [];
+
+      podaci.push({ datum: datum, brojKosnice: brojKosnice, tezina: tezina, minTemp: minTemp, maxTemp: maxTemp, kisa: kisa, vlaznost: vlaznost, napomene: napomene });
+
+      localStorage.setItem("kosnice", JSON.stringify(podaci));
+
+      azurirajTablicu();
+
+      document.getElementById("datum").value = "";
+      document.getElementById("brojKosnice").value = "";
+      document.getElementById("tezina").value = "";
+      document.getElementById("minTemp").value = "";
+      document.getElementById("maxTemp").value = "";
+      document.getElementById("kisa").value = "";
+      document.getElementById("vlaznost").value = "";
+      document.getElementById("napomene").value = "";
+    }
+
+    // Funkcija za postavljanje trenutnog datuma u input polje
+    function postaviSadasnjiDatum() {
+      let danas = new Date();
+      let dan = danas.getDate();
+      let mjesec = danas.getMonth() + 1;
+      let godina = danas.getFullYear();
+
+      if (dan < 10) {
+        dan = '0' + dan;
+      }
+
+      if (mjesec < 10) {
+        mjesec = '0' + mjesec;
+      }
+
+      let sadasnjiDatum = godina + '-' + mjesec + '-' + dan;
+
+      document.getElementById("datum").value = sadasnjiDatum;
+    }
+
+    // Funkcija za brisanje svih podataka iz localStorage-a
+    function izbrisiSvePodatke() {
+      localStorage.removeItem("kosnice");
+      azurirajTablicu();
+    }
+
+    // Funkcija za spremanje podataka iz localStorage-a na server
+    function preuzmiPodatke() {
+      // Dohvati podatke iz tablice
+      let tabela = document.getElementById("statistika");
+      let tbody = tabela.getElementsByTagName("tbody")[0];
+      let redovi = tbody.getElementsByTagName("tr");
+
+      let podaci = [];
+
+      for (let i = 0; i < redovi.length; i++) {
+        let datum = redovi[i].cells[0].textContent;
+        let brojKosnice = parseFloat(redovi[i].cells[1].textContent);
+        let tezina = parseFloat(redovi[i].cells[2].textContent);
+        let minTemp = parseFloat(redovi[i].cells[3].textContent);
+        let maxTemp = parseFloat(redovi[i].cells[4].textContent);
+        let kisa = parseFloat(redovi[i].cells[5].textContent);
+        let vlaznost = parseFloat(redovi[i].cells[6].textContent);
+        let napomene = redovi[i].cells[7].textContent;
+
+        podaci.push({ datum: datum, brojKosnice: brojKosnice, tezina: tezina, minTemp: minTemp, maxTemp: maxTemp, kisa: kisa, vlaznost: vlaznost, napomene: napomene });
+      }
+
+      // Kreiraj JSON datoteku
+      let jsonPodaci = JSON.stringify(podaci);
+      let imeDatoteke = "podaci.json";
+
+      // Kreiraj link za preuzimanje datoteke
+      let link = document.createElement("a");
+      link.setAttribute("href", "data:text/json;charset=utf-8," + encodeURIComponent(jsonPodaci));
+      link.setAttribute("download", imeDatoteke);
+      document.body.appendChild(link);
+
+      // Klikni na link kako bi se pokrenulo preuzimanje
+      link.click();
+
+      // Ukloni link iz DOM-a
+      document.body.removeChild(link);
+    }
+
+    // Funkcija za učitavanje JSON datoteke i ažuriranje podataka
+    function ucitajPodatke(event) {
+      let input = event.target;
+      let file = input.files[0];
+      let reader = new FileReader();
+
+      reader.onload = function() {
+        let podaci = JSON.parse(reader.result);
+
+        // Ažuriraj tablicu s učitanim podacima
+        let tabela = document.getElementById("statistika");
+        let tbody = tabela.getElementsByTagName("tbody")[0];
+        tbody.innerHTML = "";
+
+        podaci.forEach(function(podatak) {
+          let red = document.createElement("tr");
+          red.innerHTML = `
+            <td>${podatak.datum}</td>
+            <td>${podatak.brojKosnice}</td>
+            <td>${podatak.tezina}</td>
+            <td>${podatak.minTemp}</td>
+            <td>${podatak.maxTemp}</td>
+            <td>${podatak.kisa}</td>
+            <td>${podatak.vlaznost}</td>
+            <td>${podatak.napomene}</td>
+          `;
+          tbody.appendChild(red);
+        });
+      padding: 8px;
+
+        alert("Podaci su učitani.");
+      };
+
+      reader.readAsText(file);
+    }
+
+    // Poziv funkcije za ažuriranje tablice kada se stranica učita
+    window.onload = azurirajTablicu;
+  </script>
+</body>
+</html>
